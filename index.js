@@ -31,7 +31,8 @@ window.addEventListener('load',function(event){
       var token = result.credential.accessToken;
       // The signed-in user info.
       var user = result.user;
-      footer.innerhtml = ("Logged in as:", user.displayName);
+      footer.innerHTML = "logged in as"
+      footer.innerhtml += user.displayName;
       console.log("github user:", user.displayName);
     }).catch(function(error) {
       // Handle Errors here.
