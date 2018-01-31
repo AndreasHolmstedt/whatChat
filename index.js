@@ -10,6 +10,7 @@ window.addEventListener('load',function(event){
 
   gmailLogIn.addEventListener('click',function(event){
     console.log("hej");
+    googleLoggIn();
   })
 
 
