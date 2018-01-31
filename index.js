@@ -2,10 +2,16 @@ window.addEventListener('load',function(event){
   let btnLoggIn = document.getElementById('btnLoggIn');
   let userName = document.getElementById('userName');
   let gitHubLogIn = document.getElementById('gitHubLogIn');
+  let gmailLogIn = document.getElementById("gmailLogIn");
 
+
+  gmailLogIn.addEventListener('click',function(event){
+    console.log("hej");
+  })
 
 
   gitHubLogIn.addEventListener("click", function(){
+    console.log("säck");
     gitHubAuth();
   });
 
@@ -94,11 +100,8 @@ let loggOut = ()=>{
 
 
 
-window.addEventListener('load',function(event){
-  let gmailLogIn = document.getElementById("gmailLogin");
 
 
-}
 
 let googleLoggIn = function (){
   var provider = new firebase.auth.GoogleAuthProvider();
