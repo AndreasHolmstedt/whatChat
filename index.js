@@ -1,6 +1,44 @@
 window.addEventListener('load',function(event){
   let btnLoggIn = document.getElementById('btnLoggIn');
   let userName = document.getElementById('userName');
+  let gitHubLogIn = document.getElementById('gitHubLogIn');
+
+
+
+  gitHubLogIn.addEventListener("click", function(){
+    gitHubAuth();
+  });
+
+  let gitHubAuth = function () {
+
+    var provider = new firebase.auth.GithubAuthProvider();
+
+    provider.setCustomParameters({
+      'allow_signup': 'true'
+    });
+
+    firebase.auth().signInWithPopup(provider).then(function(result) {
+      // This gives you a GitHub Access Token. You can use it to access the GitHub API.
+      var token = result.credential.accessToken;
+      // The signed-in user info.
+      var user = result.user;
+      console.log("github user:", user);
+    }).catch(function(error) {
+      // Handle Errors here.
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      // The email of the user's account used.
+      var email = error.email;
+      // The firebase.auth.AuthCredential type that was used.
+      var credential = error.credential;
+      console.log("github error: ", errorMessage);
+});
+
+  }
+
+
+
+
 
   btnLoggIn.addEventListener('click',function(event){
     if(btnLoggIn.innerHTML=="Logga in"){
@@ -51,4 +89,18 @@ let loggOut = ()=>{
   btnLoggIn.innerHTML= "Logga in";
   userName.value= '';
 
+}
+
+
+
+
+window.addEventListener('load',function(event){
+  let gmailLogIn = document.getElementById("gmailLogin");
+
+
+}
+
+let googleLoggIn = function (){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  console.log("hej");
 }
