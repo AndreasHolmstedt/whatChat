@@ -4,6 +4,7 @@ window.addEventListener('load',function(event){
   let gitHubLogIn = document.getElementById('gitHubLogIn');
   let gmailLogIn = document.getElementById("gmailLogIn");
   let footer = document.getElementsByTagName('footer');
+  let gitHubLogOutButton = document.getElementById('gitHubLogOut');
 
 
 
@@ -33,7 +34,7 @@ window.addEventListener('load',function(event){
       // The signed-in user info.
       var user = result.user;
       footer.innerHTML = "logged in as"
-      footer.innerhtml += user.displayName;
+      footer.innerHTML += user.displayName;
       console.log("github user:", user.displayName);
     }).catch(function(error) {
       // Handle Errors here.
@@ -45,9 +46,21 @@ window.addEventListener('load',function(event){
       var credential = error.credential;
       console.log("github error: ", errorMessage);
 });
-
   }
 
+
+gitHubLogOutButton.addEventListener("click", function(){
+  gitHubLogOut();
+});
+
+let gitHubLogOut = function () {
+  firebase.auth().signOut().then(function(result){
+    console.log("sign out success");
+  }).catch(function(error){
+    console.log("sign out failed");
+  })
+
+}
 
 
 
@@ -131,4 +144,23 @@ let googleLoggIn = function (){
   console.log(errorCode,errorMessage,email,credential);
 });
 
+}
+
+
+
+let chatMessage = document.getElementById('chatMessage');
+
+//FUNKTION FÖR ATT MARKERA CHATMESSAGE VID KEYPRESS
+window.addEventListener("keydown", function(evt){
+  if(evt.keyCode == 13){
+    sendChatMessage();
+  }else{
+  chatMessage.focus();
+  }
+});
+
+
+let sendChatMessage = function () {
+  chatMessage.innerHTML = "";
+  console.log("hejhej")
 }
