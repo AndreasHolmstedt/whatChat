@@ -33,9 +33,8 @@ window.addEventListener('load',function(event){
       var token = result.credential.accessToken;
       // The signed-in user info.
       var user = result.user;
-      signedInAs.innerHTML = "logged in as"
-      signedInAs.innerHTML += user.displayName;
-      console.log("github user:", user.displayName);
+      signedInAs.innerHTML = ("logged in as: ", user.displayName);
+
     }).catch(function(error) {
       // Handle Errors here.
       var errorCode = error.code;
@@ -56,6 +55,7 @@ gitHubLogOutButton.addEventListener("click", function(){
 let gitHubLogOut = function () {
   firebase.auth().signOut().then(function(result){
     console.log("sign out success");
+    signedInAs.innerHTML = "not signed in";
   }).catch(function(error){
     console.log("sign out failed");
   })
@@ -131,7 +131,8 @@ let googleLoggIn = function (){
   // The signed-in user info.
   var user = result.user;
   // ...
-  console.log(user);
+  signedInAs.innerHTML = ("logged in as: ", user.displayName);
+
 }).catch(function(error) {
   // Handle Errors here.
   var errorCode = error.code;
