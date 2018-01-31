@@ -5,7 +5,7 @@ window.addEventListener('load',function(event){
   let gmailLogIn = document.getElementById("gmailLogIn");
   let footer = document.getElementsByTagName('footer');
 
-  footer.innerhtml = "hejhej";
+
 
 
   gmailLogIn.addEventListener('click',function(event){
@@ -31,7 +31,8 @@ window.addEventListener('load',function(event){
       var token = result.credential.accessToken;
       // The signed-in user info.
       var user = result.user;
-      console.log("github user:", user);
+      footer.innerhtml = ("Logged in as:", user.displayName);
+      console.log("github user:", user.displayName);
     }).catch(function(error) {
       // Handle Errors here.
       var errorCode = error.code;
