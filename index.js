@@ -3,7 +3,7 @@ window.addEventListener('load',function(event){
   let userName = document.getElementById('userName');
   let gitHubLogIn = document.getElementById('gitHubLogIn');
   let gmailLogIn = document.getElementById("gmailLogIn");
-  let footer = document.getElementsByTagName('footer');
+  let signedInAs = document.getElementById('signedInAs');
   let gitHubLogOutButton = document.getElementById('gitHubLogOut');
 
 
@@ -33,8 +33,8 @@ window.addEventListener('load',function(event){
       var token = result.credential.accessToken;
       // The signed-in user info.
       var user = result.user;
-      footer.innerHTML = "logged in as"
-      footer.innerHTML += user.displayName;
+      signedInAs.innerHTML = "logged in as"
+      signedInAs.innerHTML += user.displayName;
       console.log("github user:", user.displayName);
     }).catch(function(error) {
       // Handle Errors here.
@@ -148,7 +148,7 @@ let googleLoggIn = function (){
 
 
 
-let chatMessage = document.getElementById('chatMessage');
+
 
 //FUNKTION FÖR ATT MARKERA CHATMESSAGE VID KEYPRESS
 window.addEventListener("keydown", function(evt){
@@ -161,6 +161,8 @@ window.addEventListener("keydown", function(evt){
 
 
 let sendChatMessage = function () {
-  chatMessage.innerHTML = "";
+
+  document.getElementById('chatMessage').value = "";
+
   console.log("hejhej")
 }
