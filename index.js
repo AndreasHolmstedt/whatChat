@@ -33,7 +33,7 @@ window.addEventListener('load',function(event){
       var token = result.credential.accessToken;
       // The signed-in user info.
       var user = result.user;
-      signedInAs.innerHTML = ("logged in as: ", user.displayName);
+      signedInAs.innerHTML = "signed in as: " + user.displayName;
 
     }).catch(function(error) {
       // Handle Errors here.
@@ -131,7 +131,7 @@ let googleLoggIn = function (){
   // The signed-in user info.
   var user = result.user;
   // ...
-  signedInAs.innerHTML = ("logged in as: ", user.displayName);
+  signedInAs.innerHTML = "signed in as: " + user.displayName;
 
 }).catch(function(error) {
   // Handle Errors here.
