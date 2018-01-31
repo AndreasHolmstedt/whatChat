@@ -3,8 +3,6 @@ background-color: #212121;
 
 }
 
-
-
 footer {
   position: absolute;
   bottom: 0px;
@@ -13,4 +11,9 @@ footer {
   background-color: #212121;
   font-size: 14px;
   margin: .5em
+}
+
+
+#chatmessage {
+  width: 100%;
 }
