@@ -1,35 +1,11 @@
 window.addEventListener('load',function(event){
   let btnLoggIn = document.getElementById('btnLoggIn');
   let userName = document.getElementById('userName');
-  let gitHubLogIn = document.getElementById('gitHubLogIn');
-  let gmailLogIn = document.getElementById("gmailLogIn");
   let signedInAs = document.getElementById('signedInAs');
-  let gitHubLogOutButton = document.getElementById('gitHubLogOut');
   let messages = document.getElementById("messages");
 
-  gmailLogIn.addEventListener('click',function(event){
-    googleLoggIn();
-  })
-
-  gitHubLogIn.addEventListener("click", function(){
-    gitHubAuth();
-  });
 
 
-
-  gitHubLogOutButton.addEventListener("click", function(){
-    gitHubLogOut();
-  });
-
-  let gitHubLogOut = function () {
-    firebase.auth().signOut().then(function(result){
-      console.log("sign out success");
-      signedInAs.innerHTML = "not signed in";
-    }).catch(function(error){
-      console.log("sign out failed");
-    })
-
-  }
 
 
   // Logga in lokalt på pc ------------------------------------------------
@@ -52,10 +28,15 @@ window.addEventListener('load',function(event){
 
   // ----------------------  END  --------------------------
 
+  let object = {  // exempel objekt
+  	name: 'Johan',
+  	msg: 'tada'
+  };
+  db.ref('messages/').push(object);
 
 
 
-})  // end of windos load
+})  // end of windos load -----------------------------------------------
 
 
 // Initialize Firebase
@@ -73,16 +54,16 @@ window.addEventListener('load',function(event){
 // Initialize Firebase END
 
 
-let loggIn = (name)=>{
+let saveToLocal = (user)=>{
   let data = {
-    name: name
+    name: user
   }
   let dataStr = JSON.stringify(data);
-  window.localStorage.setItem('data',dataStr);
+  window.localStorage.setItem('user',dataStr);
   btnLoggIn.innerHTML = "Logga ut"
 }
 
-let loggOut = ()=>{
+let removeFromLocal = ()=>{
   window.localStorage.removeItem('data');
   btnLoggIn.innerHTML= "Logga in";
   userName.value= '';
@@ -95,7 +76,7 @@ let loggOut = ()=>{
 
 
 
-let googleLoggIn = function (){
+let gmailAuth = function (){
   var provider = new firebase.auth.GoogleAuthProvider();
   console.log("loggin google function started");
   firebase.auth().signInWithPopup(provider).then(function(result) {
@@ -105,7 +86,7 @@ let googleLoggIn = function (){
   var user = result.user;
   // ...
   signedInAs.innerHTML = "signed in as: " + user.displayName;
-
+  saveToLocal(user.displayName);
 }).catch(function(error) {
   // Handle Errors here.
   var errorCode = error.code;
@@ -137,14 +118,28 @@ window.addEventListener("keydown", function(evt){
 let sendChatMessage = function () {
   let message = document.getElementById('chatMessage').value;
   if (message == "#help"){
-    document.getElementById("messages").innerHTML += "#login github<br>#login gmail<br>#logout<br>#changenick<br>"
+    document.getElementById("messages").innerHTML += "#login github<br>#login gmail<br>#logout<br>#changenick<br>#clear"
     document.getElementById('chatMessage').value = "";
   }else if(message == "#login github"){
     gitHubAuth();
     document.getElementById('chatMessage').value = "";
+  }else if(message == "#login gmail"){
+    gmailAuth();
+    console.log("logga in med gmail")
+  }else if(message == "#logout"){
+      logOut();
+  }else {  // sparar meddelande till databas
+    let myDataString = localStorage.getItem('user');  // hämta
+    let user = JSON.parse(myDataString);
+    console.log(user);
+    let msg = {
+      date: new Date(),
+      user: user.name,
+      nick: "none",
+      msg: message
+    }
+    db.ref('messages/').push(msg);
   }
-
-
   document.getElementById('chatMessage').value = "";
 }
 
@@ -156,21 +151,26 @@ let gitHubAuth = function () {
   });
 
   firebase.auth().signInWithPopup(provider).then(function(result) {
-    // This gives you a GitHub Access Token. You can use it to access the GitHub API.
     var token = result.credential.accessToken;
-    // The signed-in user info.
     var user = result.user;
     signedInAs.innerHTML = "signed in as: " + user.displayName;
 
   }).catch(function(error) {
-    // Handle Errors here.
     var errorCode = error.code;
     var errorMessage = error.message;
-    // The email of the user's account used.
     var email = error.email;
-    // The firebase.auth.AuthCredential type that was used.
     var credential = error.credential;
     console.log("github error: ", errorMessage);
   });
+
+}
+
+let logOut = function () {
+  firebase.auth().signOut().then(function(result){
+    console.log("sign out success");
+    signedInAs.innerHTML = "not signed in";
+  }).catch(function(error){
+    console.log("sign out failed");
+  })
 
 }
