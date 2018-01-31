@@ -15,32 +15,7 @@ window.addEventListener('load',function(event){
     gitHubAuth();
   });
 
-  const gitHubAuth = function () {
-    var provider = new firebase.auth.GithubAuthProvider();
 
-    provider.setCustomParameters({
-      'allow_signup': 'true'
-    });
-
-    firebase.auth().signInWithPopup(provider).then(function(result) {
-      // This gives you a GitHub Access Token. You can use it to access the GitHub API.
-      var token = result.credential.accessToken;
-      // The signed-in user info.
-      var user = result.user;
-      signedInAs.innerHTML = "signed in as: " + user.displayName;
-
-    }).catch(function(error) {
-      // Handle Errors here.
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      // The email of the user's account used.
-      var email = error.email;
-      // The firebase.auth.AuthCredential type that was used.
-      var credential = error.credential;
-      console.log("github error: ", errorMessage);
-    });
-
-  }
 
   gitHubLogOutButton.addEventListener("click", function(){
     gitHubLogOut();
@@ -76,6 +51,8 @@ window.addEventListener('load',function(event){
   }
 
   // ----------------------  END  --------------------------
+
+
 
 
 })  // end of windos load
@@ -160,12 +137,40 @@ window.addEventListener("keydown", function(evt){
 let sendChatMessage = function () {
   let message = document.getElementById('chatMessage').value;
   if (message == "#help"){
-    console.log("lista med kommandon")
     document.getElementById("messages").innerHTML += "#login github<br>#login gmail<br>#logout<br>#changenick<br>"
+    document.getElementById('chatMessage').value = "";
   }else if(message == "#login github"){
     gitHubAuth();
+    document.getElementById('chatMessage').value = "";
   }
 
 
   document.getElementById('chatMessage').value = "";
+}
+
+let gitHubAuth = function () {
+  var provider = new firebase.auth.GithubAuthProvider();
+
+  provider.setCustomParameters({
+    'allow_signup': 'true'
+  });
+
+  firebase.auth().signInWithPopup(provider).then(function(result) {
+    // This gives you a GitHub Access Token. You can use it to access the GitHub API.
+    var token = result.credential.accessToken;
+    // The signed-in user info.
+    var user = result.user;
+    signedInAs.innerHTML = "signed in as: " + user.displayName;
+
+  }).catch(function(error) {
+    // Handle Errors here.
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    // The email of the user's account used.
+    var email = error.email;
+    // The firebase.auth.AuthCredential type that was used.
+    var credential = error.credential;
+    console.log("github error: ", errorMessage);
+  });
+
 }
