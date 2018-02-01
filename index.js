@@ -27,15 +27,15 @@ window.addEventListener('load',function(event){
   }
 
   // ----------------------  END  --------------------------
-
+  /*
   let object = {  // exempel objekt
   	name: 'Johan',
   	msg: 'tada'
+    like: 0
   };
+
   db.ref('messages/').push(object);
-
-
-
+  */
 })  // end of windos load -----------------------------------------------
 
 
@@ -67,43 +67,27 @@ let removeFromLocal = ()=>{
   window.localStorage.removeItem('data');
   btnLoggIn.innerHTML= "Logga in";
   userName.value= '';
-
 }
-
-
-
-
-
 
 
 let gmailAuth = function (){
   var provider = new firebase.auth.GoogleAuthProvider();
   console.log("loggin google function started");
   firebase.auth().signInWithPopup(provider).then(function(result) {
-  // This gives you a Google Access Token. You can use it to access the Google API.
   var token = result.credential.accessToken;
-  // The signed-in user info.
   var user = result.user;
-  // ...
   signedInAs.innerHTML = "signed in as: " + user.displayName;
+  fetchFromDb();
   saveToLocal(user.displayName);
 }).catch(function(error) {
-  // Handle Errors here.
   var errorCode = error.code;
   var errorMessage = error.message;
-  // The email of the user's account used.
   var email = error.email;
-  // The firebase.auth.AuthCredential type that was used.
   var credential = error.credential;
-  // ...
   console.log(errorCode,errorMessage,email,credential);
 });
 
 }
-
-
-
-
 
 //FUNKTION FÖR ATT MARKERA CHATMESSAGE VID KEYPRESS
 window.addEventListener("keydown", function(evt){
@@ -117,18 +101,35 @@ window.addEventListener("keydown", function(evt){
 
 let sendChatMessage = function () {
   let message = document.getElementById('chatMessage').value;
+  let messages = document.getElementById('messages');
   if (message == "#help"){
-    document.getElementById("messages").innerHTML += "#login github<br>#login gmail<br>#logout<br>#changenick<br>#clear"
+    messages.innerHTML += "<p>#login github</p><p>#login gmail</p><p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#remove (followed by row number)</p>"
     document.getElementById('chatMessage').value = "";
   }else if(message == "#login github"){
+    messages.innerHTML += "<p>#login github</p>";
     gitHubAuth();
     document.getElementById('chatMessage').value = "";
   }else if(message == "#login gmail"){
+    messages.innerHTML += "<p>#login gmail</p>";
     gmailAuth();
     console.log("logga in med gmail")
   }else if(message == "#logout"){
+    messages.innerHTML += "<p>#logout</p>";
       logOut();
-  }else {  // sparar meddelande till databas
+  }else if (message == "#changenick"){
+    // PUT CHANGE NICK METHOD here
+    console.log("changenick");
+  }else if (message == "#clear"){
+    //hämta alla meddelande från databas
+    console.log("clear");
+  }else if (message.substring(0, 5) == "#like"){
+
+
+    //lägg till like i databas samt uppdatera chatt
+    //message.substring(6, message.length)
+  }else if (message.substring(0, 7) == "#remove"){
+    //message.substring(8, message.length)
+  }else{  // sparar meddelande till databas
     let myDataString = localStorage.getItem('user');  // hämta
     let user = JSON.parse(myDataString);
     console.log(user);
@@ -136,17 +137,28 @@ let sendChatMessage = function () {
       date: new Date(),
       user: user.name,
       nick: "none",
-      msg: message
+      msg: message,
+      likes: 0
     }
     db.ref('messages/').push(msg);
   }
   document.getElementById('chatMessage').value = "";
 }
 
+let fetchFromDb = function () {
+
+  db.ref("messages/").on("value", function(snapshot){
+
+      let data = snapshot.val();
+      console.log(data);
+
+  })
+}
+
 let gitHubAuth = function () {
   var provider = new firebase.auth.GithubAuthProvider();
 
-  provider.setCustomParameters({
+provider.setCustomParameters({
     'allow_signup': 'true'
   });
 
@@ -154,7 +166,7 @@ let gitHubAuth = function () {
     var token = result.credential.accessToken;
     var user = result.user;
     signedInAs.innerHTML = "signed in as: " + user.displayName;
-
+    fetchFromDb();
   }).catch(function(error) {
     var errorCode = error.code;
     var errorMessage = error.message;
