@@ -77,8 +77,9 @@ let gmailAuth = function (){
   var token = result.credential.accessToken;
   var user = result.user;
   signedInAs.innerHTML = "signed in as: " + user.displayName;
-  fetchFromDb();
+  console.log(user);
   saveToLocal(user.displayName);
+  fetchFromDb();
 }).catch(function(error) {
   var errorCode = error.code;
   var errorMessage = error.message;
@@ -124,11 +125,20 @@ let sendChatMessage = function () {
     console.log("clear");
   }else if (message.substring(0, 5) == "#like"){
 
+/*Man ska kunna klicka på ett meddelande för
+ att gilla eller ogilla (upvote/downvote) meddelanden.
+  Gilla/ogilla ska lagras i databasen som ett objekt med
+   egenskaperna: den som gjort en like, meddelandets "id",
+    om det är +1 eller -1. Det ska stå på meddelandet hur många
+     likes och unlikes det har totalt, respektive. Både skriva
+      meddelanden och gilla/ogilla ska uppdateras dynamiskt.w*/
 
-    //lägg till like i databas samt uppdatera chatt
+
     //message.substring(6, message.length)
   }else if (message.substring(0, 7) == "#remove"){
     //message.substring(8, message.length)
+  }else if(message.substring(0, 1) == "#"){
+    messages.innerHTML += "invalid command";
   }else{  // sparar meddelande till databas
     let myDataString = localStorage.getItem('user');  // hämta
     let user = JSON.parse(myDataString);
@@ -137,8 +147,10 @@ let sendChatMessage = function () {
       date: new Date(),
       user: user.name,
       nick: "none",
-      msg: message,
-      likes: 0
+      message: message,
+      likes : 0
+
+
     }
     db.ref('messages/').push(msg);
   }
@@ -146,18 +158,27 @@ let sendChatMessage = function () {
 }
 
 let fetchFromDb = function () {
+  let messages = document.getElementById('messages');
 
   db.ref("messages/").on("value", function(snapshot){
-
+      let rowNumber = 0
+      messages.innerHTML="";
       let data = snapshot.val();
-      console.log(data);
+      for(let msg in data){
+        messages.innerHTML += `
+          <div>
+            <span>${++rowNumber}</span>
+            <span>${new Date().getTime() - data[msg].date.getTime()}</span>
+            <span>~</span>
+            <span>data[msg].message</span>
+          </div>`
+      }
 
   })
 }
 
 let gitHubAuth = function () {
   var provider = new firebase.auth.GithubAuthProvider();
-
 provider.setCustomParameters({
     'allow_signup': 'true'
   });
