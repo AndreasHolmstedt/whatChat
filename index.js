@@ -1,6 +1,6 @@
 let allMsg = {};
 
-window.addEventListener('load',function(event){
+window.addEventListener("load",function(event){
   let signedInAs = document.getElementById('signedInAs');
   let messages = document.getElementById("messages");
   let commands = document.getElementById("commands");
@@ -8,6 +8,21 @@ window.addEventListener('load',function(event){
 
   checkIfUserSignedIn();
   loadUserLogin();
+
+  function checkLoginState() {
+  FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+  });
+}
+
+
+  FB.getLoginStatus(function(response) {
+      statusChangeCallback(response);
+  });
+
+
+
+
 
 })  // end of windos load -----------------------------------------------
 
@@ -41,7 +56,7 @@ let saveUserToLocal = (user)=>{
 }
 
 let removeFromLocal = ()=>{
-  window.localStorage.removeItem('data');
+  window.localStorage.removeItem('user');
   userName.value= '';
 }
 
@@ -76,88 +91,99 @@ let sendChatMessage = function () {
 
   let user = JSON.parse(myDataString);
 
-  if (message == "#help"){
-    commands.innerHTML += "<p>#login github</p><p>#login gmail</p><p>#login facebook</p><p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#dislike (followed by row number)</p><p>#remove (followed by row number)</p>"
-  }else if(message == "#login github"){
-    commands.innerHTML += "<p>#login github</p>";
-    gitHubAuth();
-  }else if(message == "#login gmail"){
-    commands.innerHTML += "<p>#login gmail</p>";
-    gmailAuth();
-  }else if(message == "#login facebook"){
-    facebookAuth();
-    commands.innerHTML += "<p>#login facebook</p>"
-  }else if(message == "#logout"){
-    commands.innerHTML += "<p>#logout</p>";
-      logOut();
-  }else if (message.substring(0, 11) == "#changenick"){
+    if(!user){
 
-    if (message.length < 23){
-      let nick = message.substring(12, message.length)
-      window.localStorage.setItem('nick',nick);
-      commands.innerHTML += ("<p>" + message + "</p>");
-    }else{
-      commands.innerHTML += "<p>nickname cant be more than 10 characters</p>"
+      if (message == "#help"){
+        commands.innerHTML += "<p>Please login to before use WhatChat.</p><p>#login github</p><p>#login gmail</p><p>#login facebook</p>"
+      }else if(message == "#login github"){
+        commands.innerHTML += "<p>#login github</p>";
+        gitHubAuth();
+      }else if(message == "#login gmail"){
+        commands.innerHTML += "<p>#login gmail</p>";
+        gmailAuth();
+      }else if(message == "#login facebook"){
+        facebookAuth();
+        commands.innerHTML += "<p>#login facebook</p>"
+      }else{
+        commands.innerHTML += "<p>Please sign in before you use WhatChat</p>"
+      }
     }
-  }else if (message == "#clear"){
-    commands.innerHTML = "";
 
-  }else if(message.substring(0, 5) == "#like"){
+    if(user){  //kontroll så att man är inloggad
 
-      let row = message.substring(6, message.length);
+    if(message == "#logout"){
+      commands.innerHTML += "<p>#logout</p>";
+        logOut();
+    }else if(message == "#help"){
+      commands.innerHTML += "<p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#dislike (followed by row number)</p><p>#remove (followed by row number)</p>"
+    }else if (message.substring(0, 11) == "#changenick"){
+
+      if (message.length < 23){
+        let nick = message.substring(12, message.length)
+        window.localStorage.setItem('nick',nick);
+        commands.innerHTML += ("<p>" + message + "</p>");
+      }else{
+        commands.innerHTML += "<p>nickname cant be more than 10 characters</p>"
+      }
+    }else if (message == "#clear"){
+      commands.innerHTML = "";
+
+    }else if(message.substring(0, 5) == "#like"){
+
+        let row = message.substring(6, message.length);
+        if(isNumber(row) != true){
+          commands.innerHTML += isNumber(row);
+        }else{
+
+         let likeObj = {
+            value : "hearts",
+            name: user.name
+          }
+
+        //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
+          db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+        }
+
+    }else if(message.substring(0, 8) == "#dislike"){
+      let row = message.substring(9, message.length);
       if(isNumber(row) != true){
         commands.innerHTML += isNumber(row);
       }else{
+        let likeObj = {
+           value : "poos",
+           name: user.name
+         }
 
-       let likeObj = {
-          value : "hearts",
-          name: user.name
-        }
-
-      //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
-        db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+       //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
+         db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
       }
 
+    }else if (message.substring(0, 7) == "#remove"){
+      commands.innerHTML += ("<p>" + message + "</p>");
+      row = message.substring(8, message.length)
+      if(isNumber(row) != true){
+        commands.innerHTML += isNumber(row);
+      }else{
+        let msgId = allMsg[row].id
+        db.ref("messages/" + msgId).remove();
+      }
+    }else if(message.substring(0, 1) == "#"){
+      commands.innerHTML += "<p>invalid command</p>";
+    }else{  // sparar meddelande till databas
 
-  }else if(message.substring(0, 8) == "#dislike"){
-    let row = message.substring(9, message.length);
-    if(isNumber(row) != true){
-      commands.innerHTML += isNumber(row);
-    }else{
-      let likeObj = {
-         value : "poos",
-         name: user.name
-       }
-
-     //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
-       db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+      let msg = {
+        date: firebase.database.ServerValue.TIMESTAMP,
+        user: user.name,
+        userUid: user.Uid,
+        nick: setNick(),
+        message: message,
+        likes : {},
+      }
+      db.ref('messages/').push(msg);
     }
-
-  }else if (message.substring(0, 7) == "#remove"){
-    commands.innerHTML += ("<p>" + message + "</p>");
-    row = message.substring(8, message.length)
-    if(isNumber(row) != true){
-      commands.innerHTML += isNumber(row);
-    }else{
-      let msgId = allMsg[row].id
-      db.ref("messages/" + msgId).remove();
-    }
-  }else if(message.substring(0, 1) == "#"){
-    commands.innerHTML += "<p>invalid command</p>";
-  }else{  // sparar meddelande till databas
-
-    let msg = {
-      date: firebase.database.ServerValue.TIMESTAMP,
-      user: user.name,
-      userUid: user.Uid,
-      nick: setNick(),
-      message: message,
-      likes : {},
-    }
-    db.ref('messages/').push(msg);
   }
+    chatMessage.value = "";
 
-  chatMessage.value = "";
 }
 
 
@@ -203,17 +229,20 @@ let fetchFromDb = function () {
         }
 
         allMsg[rowNumber] = {id: msg}
-        messages.innerHTML += `
-          <div>
-            <span class="row">${printRowNumber(rowNumber++)}</span>
-               <span class="time">${calculateTime(data[msg].date)}</span>
-               <span class="nick">${data[msg].nick}</span>
-            <span class="likes">${hearts}</span>
-            <span class="sign2">/</span>
-            <span class="dislikes">${poos}</span>
-            <span class="sign">~</span>
-            <span class="message">${data[msg].message}</span>
-          </div>`
+            let messageDiv = document.createElement('div');
+                     let message = document.createElement('span');
+                     message.innerText = data[msg].message;
+                     messageDiv.innerHTML = `<span class="row">${printRowNumber(rowNumber++)}</span>
+                                             <span class="time">${calculateTime(data[msg].date)}</span>
+                                             <span class="nick">${data[msg].nick}</span>
+                                             <span class="likes">${hearts}</span>
+                                             <span class="sign2">/</span>
+                                             <span class="dislikes">${poos}</span>
+                                             <span class="sign">~</span>`
+                     messageDiv.appendChild(message);
+                     messages.appendChild(messageDiv);
+
+
       }
 
 
@@ -285,8 +314,39 @@ let facebookAuth = function () {
   firebase.auth().signInWithRedirect(provider);
 }
 
+
+
+
+window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '580629558939765',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v2.8',
+    });
+
+    FB.AppEvents.logPageView();
+
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+
+
+
+
+
+
+
+
 let gitHubAuth = function () {
-  var provider = new firebase.auth.FacebookAuthProvider();
+  var provider = new firebase.auth.GithubAuthProvider();
   firebase.auth().signInWithRedirect(provider);
 }
 
@@ -345,6 +405,8 @@ let loadUserLogin= function(){
 let logOut = function () {
   firebase.auth().signOut().then(function(result){
     signedInAs.innerHTML = "not signed in";
+    messages.innerHTML = "";
+    removeFromLocal();
   }).catch(function(error){
   })
 
