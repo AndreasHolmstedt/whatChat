@@ -54,6 +54,7 @@ window.addEventListener("keydown", function(evt){
   window.scrollTo(0,document.body.scrollHeight);
   if(evt.keyCode == 13){
     sendChatMessage();
+    window.scrollTo(0,document.body.scrollHeight);
   }else{
   chatMessage.focus();
   }
