@@ -1,30 +1,114 @@
-body {
-background-color: hotpink;
 
-}
 
 footer {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  color: #424242;
-  background-color: #212121;
-  font-size: 14px;
-  margin: .5em
+  position: fixed;
+  top: 5px;
+  right: 5px;
+  color: #626262;
+  font-size: 1em;
+  display: inline;
+  font-family: 'Overpass Mono', monospace;
 }
 
 p {
   margin: 0px;
   padding: 0px;
 }
-
+span {
+  margin-left: 0px;
+  margin-right: 0px;
+}
 #messages {
+  margin: 0px;
   color: #f5f5f5;
+  font-family: 'Overpass Mono', monospace;
+  font-size: 1em;
 }
 
+
+#commands {
+  margin: 0px;
+  padding: 0px;
+  color: hotpink;
+  margin-left: 4em;
+  font-family: 'Overpass Mono', monospace;
+  font-size: 16px;
+}
+
+
 #chatMessage {
-  width: 100%;
-  background-color: #212121;
-  border: 1px solid red;
+    margin: 0px;
+    padding: 0px;
+    min-width: 100%;
+    min-height: 1em;
+    background-color: #212121;
+    color: #f5f5f5;
+    border: none;
+    font-size: 1em;
+    margin-bottom: 20vh;
+    display: inline-block;
+    font-family: 'Overpass Mono', monospace;
+}
+
+#chatMessage:focus {
+  outline: none;
+}
+
+#messages div .row {
+  color: orange;
+  width: 2em;
+  display: inline-block;
+}
+
+#messages div .time {
+  color: #4FD455;
+  display: inline-block;
+  width: 3em;
+}
+
+#messages div .nick {
+  color: #CB54DF;
+  width: 6em;
+  display: inline-block;
+}
+
+#messages div .sign {
+  color: #FFEB3B;
+  width: 1em;
+  display: inline-block;
+}
+
+
+#messages div .sign2 {
+  color: #FFEB3B;
+  width: 1em;
+  display: inline-block;
+}
+
+#messages div .likes {
+  color: lightgreen;
+  width: 1em;
+  display: inline-block;
+}
+
+#messages div .dislikes {
+  color: red;
+  width: 1em;
+  display: inline-block;
+}
+
+#messages div .message{
   color: #f5f5f5;
+  display: inline-block;
+}
+
+
+
+@media screen and (max-width: 600px) {
+  #messages div .nick {
+    font-size: 5em;
+  }
+  body{
+    background-color: rgb(205, 215, 38);
+  }
 }

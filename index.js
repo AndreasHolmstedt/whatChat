@@ -1,45 +1,19 @@
+let allMsg = {};
+
 window.addEventListener('load',function(event){
-  let btnLoggIn = document.getElementById('btnLoggIn');
-  let userName = document.getElementById('userName');
   let signedInAs = document.getElementById('signedInAs');
   let messages = document.getElementById("messages");
+  let commands = document.getElementById("commands");
+  let chatMessage = document.getElementById("chatMessage");
 
+  checkIfUserSignedIn();
+  loadUserLogin();
 
-
-
-
-  // Logga in lokalt på pc ------------------------------------------------
-
-  btnLoggIn.addEventListener('click',function(event){
-    if(btnLoggIn.innerHTML=="Logga in"){
-      loggIn(userName.value);
-    }else{
-      loggOut();
-    }
-  })
-
-  let user = localStorage.getItem('data');
-  user = JSON.parse(user);
-  if(user){
-    console.log(`inloggad som ${user.name}`);
-    btnLoggIn.innerHTML="Logga ut";
-    userName.value = user.name;
-  }
-
-  // ----------------------  END  --------------------------
-  /*
-  let object = {  // exempel objekt
-  	name: 'Johan',
-  	msg: 'tada'
-    like: 0
-  };
-
-  db.ref('messages/').push(object);
-  */
 })  // end of windos load -----------------------------------------------
 
 
-// Initialize Firebase
+// ----------------   Initialize Firebase   -------------------------------->
+
   var config = {
     apiKey: "AIzaSyB3lpOkWssrMdhLmTPWDotBwSGufmifCeQ",
     authDomain: "whatchat95.firebaseapp.com",
@@ -49,48 +23,33 @@ window.addEventListener('load',function(event){
     messagingSenderId: "304611024887"
   };
   firebase.initializeApp(config);
-  console.log("Database config loaded");
   const db = firebase.database();
-// Initialize Firebase END
+
+//  ---------------------------  END  -------------------------------------//
 
 
-let saveToLocal = (user)=>{
+// -------------------- Save user to local storage  ------------------------>
+
+let saveUserToLocal = (user)=>{
+
   let data = {
-    name: user
+    name: user.displayName,
+    Uid: user.uid
   }
   let dataStr = JSON.stringify(data);
   window.localStorage.setItem('user',dataStr);
-  btnLoggIn.innerHTML = "Logga ut"
 }
 
 let removeFromLocal = ()=>{
   window.localStorage.removeItem('data');
-  btnLoggIn.innerHTML= "Logga in";
   userName.value= '';
 }
 
+// --------------------------  END  -----------------------------------------//
 
-let gmailAuth = function (){
-  var provider = new firebase.auth.GoogleAuthProvider();
-  console.log("loggin google function started");
-  firebase.auth().signInWithPopup(provider).then(function(result) {
-  var token = result.credential.accessToken;
-  var user = result.user;
-  signedInAs.innerHTML = "signed in as: " + user.displayName;
-  console.log(user);
-  saveToLocal(user.displayName);
-  fetchFromDb();
-}).catch(function(error) {
-  var errorCode = error.code;
-  var errorMessage = error.message;
-  var email = error.email;
-  var credential = error.credential;
-  console.log(errorCode,errorMessage,email,credential);
-});
 
-}
+//FUNKTION FÖR ATT MARKERA CHATMESSAGE VID KEYPRESS ------------------------->
 
-//FUNKTION FÖR ATT MARKERA CHATMESSAGE VID KEYPRESS
 window.addEventListener("keydown", function(evt){
   if(evt.keyCode == 13){
     sendChatMessage();
@@ -99,111 +58,293 @@ window.addEventListener("keydown", function(evt){
   }
 });
 
+window.addEventListener("click", function(evt){
+  chatMessage.focus();
+});
+// --------------------------  END  ----------------------------------------//
+
+
+// ----------------------  Takes care of chat message ------------------------>
 
 let sendChatMessage = function () {
   let message = document.getElementById('chatMessage').value;
   let messages = document.getElementById('messages');
+  let myDataString = localStorage.getItem('user');  // hämta
+
+  let user = JSON.parse(myDataString);
+
   if (message == "#help"){
-    messages.innerHTML += "<p>#login github</p><p>#login gmail</p><p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#remove (followed by row number)</p>"
-    document.getElementById('chatMessage').value = "";
+    commands.innerHTML += "<p>#login github</p><p>#login gmail</p><p>#login facebook</p><p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#dislike (followed by row number)</p><p>#remove (followed by row number)</p>"
   }else if(message == "#login github"){
-    messages.innerHTML += "<p>#login github</p>";
+    commands.innerHTML += "<p>#login github</p>";
     gitHubAuth();
-    document.getElementById('chatMessage').value = "";
   }else if(message == "#login gmail"){
-    messages.innerHTML += "<p>#login gmail</p>";
+    commands.innerHTML += "<p>#login gmail</p>";
     gmailAuth();
-    console.log("logga in med gmail")
+  }else if(message == "#login facebook"){
+    facebookAuth();
+    commands.innerHTML += "<p>#login facebook</p>"
   }else if(message == "#logout"){
-    messages.innerHTML += "<p>#logout</p>";
+    commands.innerHTML += "<p>#logout</p>";
       logOut();
-  }else if (message == "#changenick"){
-    // PUT CHANGE NICK METHOD here
-    console.log("changenick");
+  }else if (message.substring(0, 11) == "#changenick"){
+
+    if (message.length < 23){
+      let nick = message.substring(12, message.length)
+      window.localStorage.setItem('nick',nick);
+      commands.innerHTML += ("<p>" + message + "</p>");
+    }else{
+      commands.innerHTML += "<p>nickname cant be more than 10 characters</p>"
+    }
   }else if (message == "#clear"){
-    //hämta alla meddelande från databas
-    console.log("clear");
-  }else if (message.substring(0, 5) == "#like"){
+    commands.innerHTML = "";
 
-/*Man ska kunna klicka på ett meddelande för
- att gilla eller ogilla (upvote/downvote) meddelanden.
-  Gilla/ogilla ska lagras i databasen som ett objekt med
-   egenskaperna: den som gjort en like, meddelandets "id",
-    om det är +1 eller -1. Det ska stå på meddelandet hur många
-     likes och unlikes det har totalt, respektive. Både skriva
-      meddelanden och gilla/ogilla ska uppdateras dynamiskt.w*/
+  }else if(message.substring(0, 5) == "#like"){
+
+      let row = message.substring(6, message.length);
+      if(isNumber(row) != true){
+        commands.innerHTML += isNumber(row);
+      }else{
+
+       let likeObj = {
+          value : "hearts",
+          name: user.name
+        }
+
+      //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
+        db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+      }
 
 
-    //message.substring(6, message.length)
+  }else if(message.substring(0, 8) == "#dislike"){
+    let row = message.substring(9, message.length);
+    if(isNumber(row) != true){
+      commands.innerHTML += isNumber(row);
+    }else{
+      let likeObj = {
+         value : "poos",
+         name: user.name
+       }
+
+     //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
+       db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+    }
+
   }else if (message.substring(0, 7) == "#remove"){
-    //message.substring(8, message.length)
+    commands.innerHTML += ("<p>" + message + "</p>");
+    row = message.substring(8, message.length)
+    if(isNumber(row) != true){
+      commands.innerHTML += isNumber(row);
+    }else{
+      let msgId = allMsg[row].id
+      db.ref("messages/" + msgId).remove();
+    }
   }else if(message.substring(0, 1) == "#"){
-    messages.innerHTML += "invalid command";
+    commands.innerHTML += "<p>invalid command</p>";
   }else{  // sparar meddelande till databas
-    let myDataString = localStorage.getItem('user');  // hämta
-    let user = JSON.parse(myDataString);
-    console.log(user);
+
     let msg = {
-      date: new Date(),
+      date: firebase.database.ServerValue.TIMESTAMP,
       user: user.name,
-      nick: "none",
+      userUid: user.Uid,
+      nick: setNick(),
       message: message,
-      likes : 0
-
-
+      likes : {},
     }
     db.ref('messages/').push(msg);
   }
-  document.getElementById('chatMessage').value = "";
+
+  chatMessage.value = "";
 }
+
+
+//------------------------------  END  --------------------------------------//
+
+let isNumber = function (row) {
+
+  if(isNaN(row)){
+    return "<p>invalid command</p>";
+  }else if(row > (Object.keys(allMsg).length) || row < 1){
+    return "<p>row number dont exist</p>";
+  }else{
+    return true;
+  }
+
+}
+
+// ---------------------   Get messages from database ------------------------>
 
 let fetchFromDb = function () {
   let messages = document.getElementById('messages');
-
   db.ref("messages/").on("value", function(snapshot){
-      let rowNumber = 0
+    allMsg={};
+      let rowNumber = 1
+
       messages.innerHTML="";
       let data = snapshot.val();
       for(let msg in data){
+
+        //räkna ihop likes
+        let hearts = 0
+        let poos = 0
+
+        if ('likes' in data[msg]){
+          let uidList = Object.keys(data[msg].likes);
+          uidList.map(name=> {
+            if(data[msg].likes[name].value == "hearts"){
+              hearts++;
+            }else if(data[msg].likes[name].value == "poos"){
+              poos++;
+            }
+          })
+        }
+
+        allMsg[rowNumber] = {id: msg}
         messages.innerHTML += `
           <div>
-            <span>${++rowNumber}</span>
-            <span>${new Date().getTime() - data[msg].date.getTime()}</span>
-            <span>~</span>
-            <span>data[msg].message</span>
+            <span class="row">${printRowNumber(rowNumber++)}</span>
+               <span class="time">${calculateTime(data[msg].date)}</span>
+               <span class="nick">${data[msg].nick}</span>
+            <span class="likes">${hearts}</span>
+            <span class="sign2">/</span>
+            <span class="dislikes">${poos}</span>
+            <span class="sign">~</span>
+            <span class="message">${data[msg].message}</span>
           </div>`
       }
 
+
   })
+}
+//------------------------------  END  --------------------------------------//
+
+let printRowNumber = function (rowNumber) {
+  let str = 0;
+
+  if (rowNumber < 10){
+      str = "0" + "0" + rowNumber
+      return str;
+  }else if(rowNumber > 9 && rowNumber < 100){
+      str = "0" + rowNumber
+      return str;
+  }else{
+    return rowNumber
+  }
+}
+
+// ---------------------   Calulate the elapsed time ------------------------>
+
+let calculateTime = function (time) {
+    let now = new Date().getTime();
+    timeSince = ((now - time) / 1000)
+
+
+    if(timeSince < 86400){
+      let hours = new Date(time).getHours();
+      let minutes = new Date(time).getMinutes();
+      hours < 10 ? hours = "0" + hours : hours;
+      minutes < 10 ? minutes = "0" + minutes : minutes;
+      return (hours + ":" + minutes);
+    }else if(timeSince > 86400){
+      return ">1d";
+    }else if(timeSince > 172800){
+      return ">2d";
+    }else if(timeSince > 432000){
+      return ">5d";
+    }else if(timeSince > 864000){
+      return ">10d";
+    }else if(timeSince > 2592000){
+      return ">1month";
+    }else{
+      return ">1month";
+    }
+
+}
+//------------------------------  END  --------------------------------------//
+
+
+let setNick = function () {
+  if(localStorage.getItem("nick") != undefined){
+    return localStorage.getItem("nick")
+  }else{
+
+    let myDataString = localStorage.getItem('user');
+    let user = JSON.parse(myDataString);
+    let nick = user.name.substring(0, user.name.search(" "))
+    return nick;
+  }
+}
+
+// ---------------------   Login with diffrent providers ---------------------->
+
+let facebookAuth = function () {
+  var provider = new firebase.auth.FacebookAuthProvider();
+  firebase.auth().signInWithRedirect(provider);
 }
 
 let gitHubAuth = function () {
-  var provider = new firebase.auth.GithubAuthProvider();
-provider.setCustomParameters({
-    'allow_signup': 'true'
-  });
+  var provider = new firebase.auth.FacebookAuthProvider();
+  firebase.auth().signInWithRedirect(provider);
+}
 
-  firebase.auth().signInWithPopup(provider).then(function(result) {
-    var token = result.credential.accessToken;
-    var user = result.user;
-    signedInAs.innerHTML = "signed in as: " + user.displayName;
+let gmailAuth = function (){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithRedirect(provider);
+}
+//------------------------------ END -----------------------------------------//
+
+
+
+
+//--------------  Load user signed in ---------------------------------------->
+
+let loadUserLogin= function(){
+  firebase.auth().getRedirectResult().then(function(result) {
+    if (result.credential) {
+      var token = result.credential.accessToken;
+    }
     fetchFromDb();
+    var user = result.user;
+
   }).catch(function(error) {
+
     var errorCode = error.code;
     var errorMessage = error.message;
     var email = error.email;
     var credential = error.credential;
-    console.log("github error: ", errorMessage);
   });
-
 }
+//-------------------------  END --------------------------------------------//
+
+
+
+// ----------------  Check if user is logged in --------------------------->
+// mer info  https://firebase.google.com/docs/auth/web/manage-users?authuser=0
+
+  let checkIfUserSignedIn = ()=>{
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+          signedInAs.innerHTML = ("signed in as: " + user.displayName);
+          saveUserToLocal(user);
+      } else {
+        // No user is signed in.
+
+      }
+    });
+  }
+
+// ---------------------- END ----------------------------------------------//
+
+
+
+//-------------------- Logout user from provider ----------------------------->
 
 let logOut = function () {
   firebase.auth().signOut().then(function(result){
-    console.log("sign out success");
     signedInAs.innerHTML = "not signed in";
   }).catch(function(error){
-    console.log("sign out failed");
   })
 
 }
+
+//-------------------------  END --------------------------------------------//
