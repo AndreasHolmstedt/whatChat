@@ -51,6 +51,7 @@ let removeFromLocal = ()=>{
 //FUNKTION FÖR ATT MARKERA CHATMESSAGE VID KEYPRESS ------------------------->
 
 window.addEventListener("keydown", function(evt){
+  window.scrollTo(0,document.body.scrollHeight);
   if(evt.keyCode == 13){
     sendChatMessage();
   }else{
@@ -59,6 +60,7 @@ window.addEventListener("keydown", function(evt){
 });
 
 window.addEventListener("click", function(evt){
+  window.scrollTo(0,document.body.scrollHeight);
   chatMessage.focus();
 });
 // --------------------------  END  ----------------------------------------//

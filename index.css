@@ -1,9 +1,14 @@
+body {
+  background-color: #212121;
+}
+
 
 
 footer {
   position: fixed;
-  top: 5px;
+  bottom: 5px;
   right: 5px;
+  margin:0px;
   color: #626262;
   font-size: 1em;
   display: inline;
@@ -105,10 +110,19 @@ span {
 
 
 @media screen and (max-width: 600px) {
-  #messages div .nick {
-    font-size: 5em;
+  #messages div {
+    font-size: .7em;
   }
-  body{
-    background-color: rgb(205, 215, 38);
+
+  footer {
+    font-size: .7em;
+  }
+
+  #chatMessage {
+    font-size: .7em;
+  }
+
+  #commands {
+    font-size: .7em;
   }
 }
