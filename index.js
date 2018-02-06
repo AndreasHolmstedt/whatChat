@@ -239,7 +239,7 @@ let sendChatMessage = function () {
         commands.innerHTML += ("<p>" + message + "</p>");
       }
     }else if (message.substring(0, 3) == "#md") {
-
+      console.log("inne i md");
       let roomConfig = message.substring(4, message.length)
       let newRoom  = roomConfig.split(" ")[0];
       let newRoomPassword =  roomConfig.split(" ")[1];
@@ -264,9 +264,9 @@ let sendChatMessage = function () {
           }else{
             commands.innerHTML += "<p>coomon... the room already exist!</p>";
           }
-        }{
+        }else{
           commands.innerHTML += `<p>coomon... please enter a valid name for room and password!
-                                <br/>Word length 10. ONLY letters :) </p>`;
+                                  <br/>Word length 10. ONLY letters :) </p>`;
        }
 
      }else{
@@ -298,7 +298,7 @@ let sendChatMessage = function () {
 
     }else if (message.substring(0,6) == "#rooms") {
       let all = Object.keys(allRooms);
-      commands.innerHTML += "Available rooms: " + all;
+      commands.innerHTML += "Available rooms: general(default)," + all;
 
     }else if(message.substring(0, 1) == "#"){
       commands.innerHTML += "<p>invalid command</p>";
@@ -590,7 +590,7 @@ let setChatHead = (statusLogin)=>{
 
 db.ref(`rooms/`).on("value", function(snapshot){
   allRooms = snapshot.val();
-  console.log(allRooms);
+
 });
 
 let checkWord=(str)=>{
