@@ -28,9 +28,7 @@ span {
   font-family: 'Overpass Mono', monospace;
   font-size: 1em;
 }
-.msgHead{
-  min-width: 300px;
-}
+
 .msgContainer{
   display: flex;
   flex-wrap: wrap;

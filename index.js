@@ -1,6 +1,11 @@
+allRooms={};
 let allMsg = {};
 let lastMessages = [];
-let counter = 0
+let counter = 0;
+let room ={
+  name: "general",
+  password: ""
+}
 
 window.addEventListener("load",function(event){
   let signedInAs = document.getElementById('signedInAs');
@@ -156,7 +161,23 @@ let sendChatMessage = function () {
 
         logOut();
     }else if(message == "#help"){
-      commands.innerHTML += "<p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#dislike (followed by row number)</p><p>#remove (followed by row number)</p>"
+      commands.innerHTML += `<p>******** Commands *****************</p>
+                             <p>#rooms</p>
+                             <p>#cd room password</p>
+                             <p>#md room password</p>
+                             <p>#changenick</p>
+                             <p>#like (followed by row number)</p>
+                             <p>#dislike (followed by row number)</p>
+                             <p>#remove (followed by row number)</p>
+                             <p>#clear</p>
+                             <p>#logout</p>
+                             <p>**********************************</p>
+                             <p> - Info -
+                                <br/> md = creates a new room. <br/>
+                                cd = enter a existing room.
+                             </p>
+
+                             `
     }else if (message.substring(0, 11) == "#changenick"){
 
       if (message.length < 23){
@@ -173,9 +194,12 @@ let sendChatMessage = function () {
     }else if(message.substring(0, 5) == "#like"){
 
         let row = message.substring(6, message.length);
+
         if(isNumber(row) != true){
           commands.innerHTML += isNumber(row);
+
         }else{
+          row = Number(row)  // gör om 003 --> 3
 
          let likeObj = {
             value : "hearts",
@@ -183,8 +207,8 @@ let sendChatMessage = function () {
           }
 
         //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
-          db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
-          commands.innerHTML += message
+          db.ref(`${room.name}/messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+          commands.innerHTML += `<p>${message}</p>`
         }
 
     }else if(message.substring(0, 8) == "#dislike"){
@@ -192,24 +216,90 @@ let sendChatMessage = function () {
       if(isNumber(row) != true){
         commands.innerHTML += isNumber(row);
       }else{
+          row = Number(row)  // gör om 003 --> 3
         let likeObj = {
            value : "poos",
            name: user.name
          }
 
        //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
-         db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+         db.ref(`${room.name}/messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+         commands.innerHTML += `<p>${message}</p>`
       }
 
     }else if (message.substring(0, 7) == "#remove"){
-      commands.innerHTML += ("<p>" + message + "</p>");
+
       row = message.substring(8, message.length)
       if(isNumber(row) != true){
         commands.innerHTML += isNumber(row);
       }else{
+        row = Number(row)  // gör om 003 --> 3
         let msgId = allMsg[row].id
-        db.ref("messages/" + msgId).remove();
+        db.ref(`${room.name}/messages/${msgId}`).remove();
+        commands.innerHTML += ("<p>" + message + "</p>");
       }
+    }else if (message.substring(0, 3) == "#md") {
+
+      let roomConfig = message.substring(4, message.length)
+      let newRoom  = roomConfig.split(" ")[0];
+      let newRoomPassword =  roomConfig.split(" ")[1];
+
+      console.log(roomConfig);
+      console.log(newRoom);
+      console.log(newRoomPassword);
+      console.log(allRooms);
+      if(newRoom && newRoomPassword){  // check if we got both room and password
+        if(checkWord(newRoom) && checkWord(newRoomPassword)){  // check if max 10 letters only letter is valid
+          //console.log("room and pass ok");
+          if(!allRooms || !allRooms.hasOwnProperty("newRoom")){
+            db.ref(`${room.name}/`).off
+            room.name = newRoom;
+            room.password = newRoomPassword;
+
+            setChatHead(true);
+            fetchFromDb();
+            db.ref(`rooms/${room.name}`).set(room.password);
+            console.log("finns inte"+ newRoom);
+            commands.innerHTML += `<p>Created room: ${room.name}</p>`;
+          }else{
+            commands.innerHTML += "<p>coomon... the room already exist!</p>";
+          }
+        }{
+          commands.innerHTML += `<p>coomon... please enter a valid name for room and password!
+                                <br/>Word length 10. ONLY letters :) </p>`;
+       }
+
+     }else{
+        commands.innerHTML += `<p>coomon... please enter a valid name for room and password!
+                             <br/>Word length 10. ONLY letters :) </p>`;
+     }
+
+
+    }else if (message.substring(0, 3) == "#cd") {
+
+      let roomConfig = message.substring(4, message.length)
+      let selectedRoom  = roomConfig.split(" ")[0];
+      let selectedPassword =  roomConfig.split(" ")[1];
+      if(selectedRoom === "general" || allRooms.hasOwnProperty(selectedRoom)){
+        if(selectedRoom === "general" || allRooms[selectedRoom] == selectedPassword ){
+          db.ref(`${room.name}/`).off
+          room.name = selectedRoom;
+          setChatHead(true);
+          fetchFromDb();
+        }else{
+          commands.innerHTML += "<p>coomon... wrong password!</p>";
+        }
+
+
+      }else{
+        commands.innerHTML += `<p>coomon... Room ${selectedRoom} dosent even exists!</p>`;
+      }
+
+
+    }else if (message.substring(0,6) == "#rooms") {
+      let all = Object.keys(allRooms);
+      commands.innerHTML += "Available rooms: " + all;
+
     }else if(message.substring(0, 1) == "#"){
       commands.innerHTML += "<p>invalid command</p>";
     }else{  // sparar meddelande till databas
@@ -222,7 +312,7 @@ let sendChatMessage = function () {
         message: message,
         likes : {},
       }
-      db.ref('messages/').push(msg);
+      db.ref(`${room.name}/messages/`).push(msg);
     }
   }
 
@@ -251,7 +341,7 @@ let isNumber = function (row) {
 
 let fetchFromDb = function () {
   let messages = document.getElementById('messages');
-  db.ref("messages/").on("value", function(snapshot){
+  db.ref(`${room.name}/messages/`).on("value", function(snapshot){
     allMsg={};
       let rowNumber = 1
 
@@ -488,9 +578,28 @@ let logOut = function () {
 // statusLogin is as boolen
 let setChatHead = (statusLogin)=>{
   if(statusLogin){
-    document.getElementById('chatHead').innerText = `${localStorage.getItem("nick")}>>`;
+    document.getElementById('chatHead').innerText = `${localStorage.getItem("nick")}@${room.name}>>`;
   }else{
     document.getElementById('chatHead').innerText = `>>`;
   }
 }
 //-------------------------  END --------------------------------------------//
+
+
+//---------------------- ROOM functions ---------------------------------------/
+
+db.ref(`rooms/`).on("value", function(snapshot){
+  allRooms = snapshot.val();
+  console.log(allRooms);
+});
+
+let checkWord=(str)=>{
+  let alphaExp = /^[a-zA-Z]+$/;
+  if(str.match(alphaExp) && str.length<11){
+    return true
+  }else{
+    return false
+  }
+}
+
+//----------------------
