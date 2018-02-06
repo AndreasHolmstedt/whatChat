@@ -1,10 +1,13 @@
 let allMsg = {};
+let lastMessages = [];
+let counter = 0
 
 window.addEventListener("load",function(event){
   let signedInAs = document.getElementById('signedInAs');
   let messages = document.getElementById("messages");
   let commands = document.getElementById("commands");
   let chatMessage = document.getElementById("chatMessage");
+  let chatHead = document.getElementById("chatHead");
 
   checkIfUserSignedIn();
   loadUserLogin();
@@ -19,9 +22,6 @@ window.addEventListener("load",function(event){
   FB.getLoginStatus(function(response) {
       statusChangeCallback(response);
   });
-
-
-
 
 
 })  // end of windos load -----------------------------------------------
@@ -57,6 +57,7 @@ let saveUserToLocal = (user)=>{
 
 let removeFromLocal = ()=>{
   window.localStorage.removeItem('user');
+  window.localStorage.removeItem('nick');
   userName.value= '';
 }
 
@@ -79,7 +80,36 @@ window.addEventListener("click", function(evt){
   window.scrollTo(0,document.body.scrollHeight);
   chatMessage.focus();
 });
+
+window.onkeydown = function(evt){
+
+  if (lastMessages.length!==0){
+    if(evt.keyCode == 38){
+      evt.preventDefault();
+
+      if(counter < 1){
+        counter = lastMessages.length
+      }
+      counter--
+      chatMessage.value = lastMessages[counter]
+
+    }else if (evt.keyCode==40) {
+      evt.preventDefault();
+
+      if(counter > lastMessages.length-2){
+        counter = -1;
+      }
+      counter++
+      chatMessage.value = lastMessages[counter]
+    }
+  }
+
+
+};
+
 // --------------------------  END  ----------------------------------------//
+
+
 
 
 // ----------------------  Takes care of chat message ------------------------>
@@ -94,7 +124,17 @@ let sendChatMessage = function () {
     if(!user){
 
       if (message == "#help"){
-        commands.innerHTML += "<p>Please login to before use WhatChat.</p><p>#login github</p><p>#login gmail</p><p>#login facebook</p>"
+        commands.innerHTML += `
+                               <p>*****  Welcome to WhatChat! *************</p>
+                               <p> Please login before use WhatChat. </p>
+                               <p> Down to the right you find the login status.  </p>
+                               <p> To sign in use the #login metod followed<br/>
+                                  by your choice of provider.</p>
+                               <p> Available Commands:</p>
+                               <p>&emsp; #login github </p>
+                               <p>&emsp; #login gmail </p>
+                               <p>&emsp; #login facebook  </p>
+                               <p>*****************************************</p>`
       }else if(message == "#login github"){
         commands.innerHTML += "<p>#login github</p>";
         gitHubAuth();
@@ -113,6 +153,7 @@ let sendChatMessage = function () {
 
     if(message == "#logout"){
       commands.innerHTML += "<p>#logout</p>";
+
         logOut();
     }else if(message == "#help"){
       commands.innerHTML += "<p>#logout</p><p>#changenick</p><p>#clear</p><p>#like (followed by row number)</p><p>#dislike (followed by row number)</p><p>#remove (followed by row number)</p>"
@@ -122,6 +163,7 @@ let sendChatMessage = function () {
         let nick = message.substring(12, message.length)
         window.localStorage.setItem('nick',nick);
         commands.innerHTML += ("<p>" + message + "</p>");
+        setChatHead(true);
       }else{
         commands.innerHTML += "<p>nickname cant be more than 10 characters</p>"
       }
@@ -142,6 +184,7 @@ let sendChatMessage = function () {
 
         //  db.ref(`messages/${allMsg[row].id}/likes`).child("pelle").setValue(likeObj);
           db.ref(`messages/${allMsg[row].id}/likes/${user.Uid}`).set(likeObj);
+          commands.innerHTML += message
         }
 
     }else if(message.substring(0, 8) == "#dislike"){
@@ -175,13 +218,16 @@ let sendChatMessage = function () {
         date: firebase.database.ServerValue.TIMESTAMP,
         user: user.name,
         userUid: user.Uid,
-        nick: setNick(),
+        nick: localStorage.getItem("nick"),
         message: message,
         likes : {},
       }
       db.ref('messages/').push(msg);
     }
   }
+
+lastMessages.push(chatMessage.value);
+   //counter = lastMessages.length
     chatMessage.value = "";
 
 }
@@ -230,23 +276,29 @@ let fetchFromDb = function () {
 
         allMsg[rowNumber] = {id: msg}
             let messageDiv = document.createElement('div');
-                     let message = document.createElement('span');
+            messageDiv.className="msgContainer";
+                     let message = document.createElement('div');
+                     message.className ="msgText";
                      message.innerText = data[msg].message;
-                     messageDiv.innerHTML = `<span class="row">${printRowNumber(rowNumber++)}</span>
+                     messageDiv.innerHTML =`<div class="msgHead">
+                                             <span class="row">${printRowNumber(rowNumber++)}</span>
                                              <span class="time">${calculateTime(data[msg].date)}</span>
                                              <span class="nick">${data[msg].nick}</span>
                                              <span class="likes">${hearts}</span>
                                              <span class="sign2">/</span>
                                              <span class="dislikes">${poos}</span>
-                                             <span class="sign">~</span>`
+                                             <span class="sign">~</span>
+                                           </div>
+                                             `
                      messageDiv.appendChild(message);
                      messages.appendChild(messageDiv);
 
-
+                     window.scrollTo(0,document.body.scrollHeight);
       }
 
 
   })
+
 }
 //------------------------------  END  --------------------------------------//
 
@@ -298,12 +350,15 @@ let calculateTime = function (time) {
 let setNick = function () {
   if(localStorage.getItem("nick") != undefined){
     return localStorage.getItem("nick")
+
   }else{
 
     let myDataString = localStorage.getItem('user');
     let user = JSON.parse(myDataString);
     let nick = user.name.substring(0, user.name.search(" "))
-    return nick;
+    window.localStorage.setItem('nick',nick);
+    //return nick;
+
   }
 }
 
@@ -348,11 +403,13 @@ window.fbAsyncInit = function() {
 let gitHubAuth = function () {
   var provider = new firebase.auth.GithubAuthProvider();
   firebase.auth().signInWithRedirect(provider);
+
 }
 
 let gmailAuth = function (){
   var provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithRedirect(provider);
+
 }
 //------------------------------ END -----------------------------------------//
 
@@ -362,12 +419,17 @@ let gmailAuth = function (){
 //--------------  Load user signed in ---------------------------------------->
 
 let loadUserLogin= function(){
+  messages.innerHTML = "Loading.. Please wait while connecting to database..";
+
   firebase.auth().getRedirectResult().then(function(result) {
+
     if (result.credential) {
       var token = result.credential.accessToken;
+
     }
-    fetchFromDb();
+
     var user = result.user;
+
 
   }).catch(function(error) {
 
@@ -376,6 +438,7 @@ let loadUserLogin= function(){
     var email = error.email;
     var credential = error.credential;
   });
+
 }
 //-------------------------  END --------------------------------------------//
 
@@ -389,9 +452,13 @@ let loadUserLogin= function(){
       if (user) {
           signedInAs.innerHTML = ("signed in as: " + user.displayName);
           saveUserToLocal(user);
+          setNick();
+          setChatHead(true);
+          fetchFromDb();
       } else {
+          setChatHead(false);
         // No user is signed in.
-
+        document.getElementById('messages').innerHTML = "";
       }
     });
   }
@@ -407,9 +474,23 @@ let logOut = function () {
     signedInAs.innerHTML = "not signed in";
     messages.innerHTML = "";
     removeFromLocal();
+
   }).catch(function(error){
   })
 
 }
 
+//-------------------------  END --------------------------------------------//
+
+
+
+//-----------------------  set the chathead  ------------------------------//
+// statusLogin is as boolen
+let setChatHead = (statusLogin)=>{
+  if(statusLogin){
+    document.getElementById('chatHead').innerText = `${localStorage.getItem("nick")}>>`;
+  }else{
+    document.getElementById('chatHead').innerText = `>>`;
+  }
+}
 //-------------------------  END --------------------------------------------//
