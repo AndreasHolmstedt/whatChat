@@ -239,18 +239,15 @@ let sendChatMessage = function () {
         commands.innerHTML += ("<p>" + message + "</p>");
       }
     }else if (message.substring(0, 3) == "#md") {
-      console.log("inne i md");
+
       let roomConfig = message.substring(4, message.length)
       let newRoom  = roomConfig.split(" ")[0];
       let newRoomPassword =  roomConfig.split(" ")[1];
 
-      console.log(roomConfig);
-      console.log(newRoom);
-      console.log(newRoomPassword);
-      console.log(allRooms);
+
       if(newRoom && newRoomPassword){  // check if we got both room and password
         if(checkWord(newRoom) && checkWord(newRoomPassword)){  // check if max 10 letters only letter is valid
-          //console.log("room and pass ok");
+
           if(!allRooms || !allRooms.hasOwnProperty("newRoom")){
             db.ref(`${room.name}/`).off
             room.name = newRoom;
@@ -259,13 +256,13 @@ let sendChatMessage = function () {
             setChatHead(true);
             fetchFromDb();
             db.ref(`rooms/${room.name}`).set(room.password);
-            console.log("finns inte"+ newRoom);
+
             commands.innerHTML += `<p>Created room: ${room.name}</p>`;
           }else{
-            commands.innerHTML += "<p>coomon... the room already exist!</p>";
+            commands.innerHTML += "<p>come on... the room already exist!</p>";
           }
         }else{
-          commands.innerHTML += `<p>coomon... please enter a valid name for room and password!
+          commands.innerHTML += `<p>come on... please enter a valid name for room and password!
                                   <br/>Word length 10. ONLY letters :) </p>`;
        }
 
@@ -287,12 +284,12 @@ let sendChatMessage = function () {
           setChatHead(true);
           fetchFromDb();
         }else{
-          commands.innerHTML += "<p>coomon... wrong password!</p>";
+          commands.innerHTML += "<p>come on... wrong password!</p>";
         }
 
 
       }else{
-        commands.innerHTML += `<p>coomon... Room ${selectedRoom} dosent even exists!</p>`;
+        commands.innerHTML += `<p>come on... Room ${selectedRoom} dosent even exists!</p>`;
       }
 
 
@@ -445,7 +442,12 @@ let setNick = function () {
 
     let myDataString = localStorage.getItem('user');
     let user = JSON.parse(myDataString);
-    let nick = user.name.substring(0, user.name.search(" "))
+    let nick ="";
+    if (user.name){
+      nick = user.name.substring(0, user.name.search(" "))
+    }else{
+      nick = "unknown"
+    }
     window.localStorage.setItem('nick',nick);
     //return nick;
 
@@ -509,7 +511,7 @@ let gmailAuth = function (){
 //--------------  Load user signed in ---------------------------------------->
 
 let loadUserLogin= function(){
-  messages.innerHTML = "Loading.. Please wait while connecting to database..";
+  messages.innerText = "Loading.. Please wait while connecting to database..";
 
   firebase.auth().getRedirectResult().then(function(result) {
 
@@ -540,7 +542,7 @@ let loadUserLogin= function(){
   let checkIfUserSignedIn = ()=>{
     firebase.auth().onAuthStateChanged(function(user) {
       if (user) {
-          signedInAs.innerHTML = ("signed in as: " + user.displayName);
+          signedInAs.innerText = ("signed in as: " + user.displayName);
           saveUserToLocal(user);
           setNick();
           setChatHead(true);
@@ -548,7 +550,7 @@ let loadUserLogin= function(){
       } else {
           setChatHead(false);
         // No user is signed in.
-        document.getElementById('messages').innerHTML = "";
+        document.getElementById('messages').innerText = "";
       }
     });
   }
@@ -561,8 +563,8 @@ let loadUserLogin= function(){
 
 let logOut = function () {
   firebase.auth().signOut().then(function(result){
-    signedInAs.innerHTML = "not signed in";
-    messages.innerHTML = "";
+    signedInAs.innerText = "not signed in";
+    messages.innerText = "";
     removeFromLocal();
 
   }).catch(function(error){
