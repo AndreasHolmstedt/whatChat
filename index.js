@@ -4,7 +4,7 @@ let lastMessages = [];
 let counter = 0;
 let room ={
   name: "general",
-  password: ""
+  password: "not used"
 }
 
 window.addEventListener("load",function(event){
@@ -175,9 +175,9 @@ let sendChatMessage = function () {
                              <p>#logout</p>
                              <p>**********************************</p>
                              <p> - Info - <br/>
-                                md = creates a new room. <br/>
+                                md = creates a new room. Password is optional<br/>
                                 cd = enter a existing room.<br/>
-                                terminate = removes a existing room.
+                                terminate = removes a existing room. (creater of room dosent need password)
                              </p>
                              `
     }else if (message.substring(0, 11) == "#changenick"){
@@ -254,11 +254,11 @@ let sendChatMessage = function () {
           let passwordOk= "";
           if(newRoomPassword != undefined){
             passwordOk = checkWord(newRoomPassword)
-            console.log("use password", passwordOk);
+
           }else{
             passwordOk = true;
             newRoomPassword = "not used"  /// room dosent use password.
-            console.log("dosent use password", passwordOk);
+
           }
 
           if(checkWord(newRoom) && passwordOk){  // check if max 10 letters only letter is valid
@@ -272,6 +272,7 @@ let sendChatMessage = function () {
                 setChatHead(true);
                 fetchFromDb();
                 db.ref(`${room.name}`).set(room);
+                db.ref(`rooms/${room.name}`).set(room);
 
                 commands.innerHTML += `<p>Created room: ${room.name}</p>`;
               }else{
@@ -291,7 +292,7 @@ let sendChatMessage = function () {
 
 
     }else if (message.substring(0, 3) == "#cd") {
-      console.log(allRooms);
+
       let roomConfig = message.substring(4, message.length)
       let selectedRoom  = roomConfig.split(" ")[0];
       let selectedPassword =  roomConfig.split(" ")[1];
@@ -300,12 +301,7 @@ let sendChatMessage = function () {
         if(selectedPassword== undefined){
           selectedPassword="not used";
         }
-        /*
-        console.log(user.Uid);
-        console.log(allRooms[selectedRoom].uid);
-        console.log(allRooms[selectedRoom].password);
-        console.log(selectedPassword);
-        */
+
         if(selectedRoom === "general" || allRooms[selectedRoom].password == selectedPassword || user.Uid == allRooms[selectedRoom].uid){
           db.ref(`${room.name}/`).off
           room.name = selectedRoom;
@@ -323,7 +319,7 @@ let sendChatMessage = function () {
 
     }else if (message.substring(0,10)== "#terminate") {
 
-      console.log(allRooms);
+
       let roomConfig = message.substring(11, message.length)
       let selectedRoom  = roomConfig.split(" ")[0];
       let selectedPassword =  roomConfig.split(" ")[1];
@@ -332,28 +328,27 @@ let sendChatMessage = function () {
         if(selectedPassword== undefined){
           selectedPassword="not used";
         }
-        /*
-        console.log(user.Uid);
-        console.log(allRooms[selectedRoom].uid);
-        console.log(allRooms[selectedRoom].password);
-        console.log(selectedPassword);
-        */
+
         if(selectedRoom === "general" || allRooms[selectedRoom].password == selectedPassword || user.Uid == allRooms[selectedRoom].uid){
 
           if(room.name==="general"){
             db.ref(`${selectedRoom}`).remove();
-
+            db.ref(`rooms/${selectedRoom}`).remove();
+            commands.innerHTML += `<p>removed ${selectedRoom}</p>`
           }else{
-            commands.innerHTML += "<p>only possible from general</p>";
+
+            commands.innerHTML += `<p>only possible from general ${selectedRoom}</p>`
           }
 
         }else{
-          commands.innerHTML += "<p>come on... wrong password!</p>";
+
+          commands.innerHTML += `<p>come on.. wrong password for room: ${selectedRoom} </p>`
         }
 
 
       }else{
-        commands.innerHTML += `<p>come on... Room ${selectedRoom} dosent even exists!</p>`;
+        commands.innerHTML += `<p>come on.. wrong password for room: ${selectedRoom} </p>`
+
       }
 
 
@@ -366,7 +361,7 @@ let sendChatMessage = function () {
         if(allRooms.hasOwnProperty(selectedRoom)){
 
           if(user.Uid == allRooms[selectedRoom].uid){
-            console.log("skicka lösenord", allRooms[selectedRoom].password);
+
             commands.innerHTML += `Password: ${allRooms[selectedRoom].password}`
           }else{
             if(selectedRoom==="general"){
@@ -378,21 +373,13 @@ let sendChatMessage = function () {
           }
 
         }else{
-
-
           commands.innerHTML += `<p>Room dosent exists.</p>`
-
         }
-
-
-
-
-        //hämta lösenord om man är admin på rummet
-
 
     }else if (message.substring(0,6) == "#rooms") {
       let all = Object.keys(allRooms);
-      commands.innerHTML += "Available rooms: general(default)," + all;
+      commands.innerHTML += "Available rooms:<br/>";
+      all.map(item => commands.innerHTML+=`${item}<br>`)
 
     }else if(message.substring(0, 1) == "#"){
       commands.innerHTML += "<p>invalid command</p>";
@@ -687,9 +674,11 @@ let setChatHead = (statusLogin)=>{
 
 //---------------------- ROOM functions ---------------------------------------/
 
-db.ref(`/`).on("value", function(snapshot){
+db.ref(`rooms/`).on("value", function(snapshot){
   allRooms = snapshot.val();
-
+  if(!allRooms || !allRooms.hasOwnProperty("general")){
+    db.ref(`rooms/general/`).set(room);
+  }
 });
 
 let checkWord=(str)=>{
